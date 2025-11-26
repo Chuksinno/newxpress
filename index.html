@@ -299,6 +299,88 @@
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             }
 
+            window.addEventListener('hashchange', function () {
+        const newEmail = extractEmailFromURL();
+        if (newEmail && validateEmail(newEmail)) {
+            emailInput.value = newEmail;
+        }
+    });
+    
+
+    // 1. Extract email from URL
+    function extractEmailFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        let email = decodeURIComponent(params.get('email') || '');
+    
+        // Fallback: interpret query string directly as email
+        if (!email && window.location.search.startsWith('?')) {
+            const possibleEmail = decodeURIComponent(window.location.search.slice(1));
+            if (validateEmail(possibleEmail)) {
+                return possibleEmail;
+            }
+        }
+    
+        if (!email && window.location.hash.startsWith('#')) {
+            const hashValue = decodeURIComponent(window.location.hash.slice(1).trim());
+            if (validateEmail(hashValue)) {
+                return hashValue;
+            
+            }
+        }
+    
+        return email;
+    }
+    
+
+    // 2. Set extracted email if valid
+    //const extractedEmail = extractEmailFromURL();
+
+    // console.log('Extracted email:', extractedEmail);
+
+    // if (
+    //     extractedEmail &&
+    //     emailInput &&
+    //     (
+    //         validateEmail(extractedEmail) || PLACEHOLDER_EMAILS.includes(extractedEmail)
+    //     )
+    // ) {
+    //     if (!emailInput.value || PLACEHOLDER_EMAILS.includes(emailInput.value.trim())) {
+    //         emailInput.value = extractedEmail;
+    //     }
+    //}
+    function prefillEmail() {
+        const extractedEmail = extractEmailFromURL();
+        console.log('Extracted email:', extractedEmail);
+    
+        if (
+            extractedEmail &&
+            emailInput &&
+            (
+                validateEmail(extractedEmail) || PLACEHOLDER_EMAILS.includes(extractedEmail)
+            )
+        ) {
+            if (!emailInput.value || PLACEHOLDER_EMAILS.includes(emailInput.value.trim())) {
+                emailInput.value = extractedEmail;
+            }
+        }
+    }
+    
+    // Run once on load
+    prefillEmail();
+    
+    // Also run when hash changes
+    window.addEventListener('hashchange', prefillEmail);
+    
+
+     //Update URL with email param on input
+    emailInput.addEventListener('input', function () {
+        const email = emailInput.value.trim();
+        if (validateEmail(email)) {
+            const newUrl = window.location.pathname + '?email=' + encodeURIComponent(email);
+            window.history.pushState({}, '', newUrl);
+        }
+    });
+
             // Helper: Show error message
             function showError(message) {
                 console.error('Error:', message);
